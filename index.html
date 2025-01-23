@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Hobby NearBy</title>
+	<link rel="icon" href="favicon.ico" type="image/x-icon">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <style>
+        #map {
+            height: 100vh;
+        }
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+		        header, footer {
+            background: #333;
+            color: white;
+            text-align: center;
+            padding: 10px;
+        }
+		 a {
+            color: white;
+            text-decoration: none;
+        }
+    </style>
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+</head>
+<body>
+    <header>
+        <h1>Hobby NearBy 🎨🎸🧩💃🕺</h1>
+    </header>
+    <div id="map"></div>
+	 <footer>
+        <a href="mailto:contact@hobbynb.com">Want to be featured? Send us your details 📧</a>
+    </footer>
+    <script>
+        const map = L.map('map').fitWorld();
+        
+        // Set up map layer
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+        
+        // Define GPS locations with descriptions
+        const locations = [
+            {lat: 52.3676, lng: 4.9041, description: "Coming soon 🎨🎸🧩💃🕺"},
+            {lat: 51.5074, lng: -0.1278, description: "Coming soon 🎨🎸🧩💃🕺"},
+            {lat: 48.8566, lng: 2.3522, description: "Coming soon 🎨🎸🧩💃🕺"}
+        ];
+        
+        // Add markers to the map
+        locations.forEach(location => {
+            const marker = L.marker([location.lat, location.lng]).addTo(map);
+            marker.bindPopup(location.description);
+        });
+        
+        // Zoom to user's location
+        map.locate({setView: true, maxZoom: 16});
+
+        // Handle location found
+        map.on('locationfound', e => {
+            const radius = e.accuracy / 2;
+            L.marker(e.latlng).addTo(map).bindPopup(`You are within ${radius} meters from this point`).openPopup();
+            L.circle(e.latlng, radius).addTo(map);
+        });
+
+        // Handle location error
+        map.on('locationerror', () => {
+            alert("Location access denied.");
+        });
+    </script>
+</body>
+</html>
