@@ -2,7 +2,6 @@
 <html>
 <head>
     <title>Hobby NearBy</title>
-	<link rel="icon" href="favicon.ico" type="image/x-icon">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
     <style>
@@ -62,7 +61,7 @@
         // Handle location found
         map.on('locationfound', e => {
             const radius = e.accuracy / 2;
-            L.marker(e.latlng).addTo(map).bindPopup(`You are within ${radius} meters from this point`).openPopup();
+            L.marker(e.latlng).addTo(map).bindPopup(`You are within ${radius} meters from this point. Zoom and pan to find Hobby lessons near you 🧭`).openPopup();
             L.circle(e.latlng, radius).addTo(map);
         });
 
