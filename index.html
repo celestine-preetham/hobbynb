@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>HobbyNB - Find Activity Partners in Chennai</title>
+    <title>HobbyNB - Find Activity Partners</title>
     
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     
@@ -103,17 +103,16 @@
     <div class="control-panel">
         <div class="panel-header">
             <h2>Find Your Hobby Buddy</h2>
-            <p>1. Drag map to your location<br>2. Select hobbies & Enter WhatsApp</p>
+            <p>1. Drag map to your location<br>2. Select hobbies & Enter a curated WhatsApp group</p>
         </div>
 
         <div class="hobby-grid" id="hobbyGrid">
             </div>
 
         <div class="input-group">
-            <input type="text" id="whatsapp" placeholder="WhatsApp (e.g. 98765xxxxx)">
             <button class="cta-btn" onclick="submitForm()">Join Now</button>
         </div>
-        <p style="text-align:center; font-size: 0.7rem; color: #999; margin-top: 10px;">We'll email contact@hobbynb.com for you.</p>
+        <p style="text-align:center; font-size: 0.7rem; color: #999; margin-top: 10px;">Complete your registration securely on Whatsapp.</p>
     </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -212,7 +211,6 @@
         }
 
         function submitForm() {
-            const whatsapp = document.getElementById('whatsapp').value;
             const center = map.getCenter();
             const locationStr = `${center.lat.toFixed(5)}, ${center.lng.toFixed(5)}`;
 
@@ -220,24 +218,15 @@
                 alert("Please select at least one hobby!");
                 return;
             }
-            if (!whatsapp) {
-                alert("Please enter your WhatsApp number.");
-                return;
-            }
 
-            // Create Email Body
-            const subject = "New HobbyNB Signup";
+            // Create Message
             const body = `New User Signup:%0D%0A%0D%0A` +
-                         `WhatsApp: ${whatsapp}%0D%0A` +
                          `Hobbies: ${selectedHobbies.join(', ')}%0D%0A` +
                          `Location Coordinates: ${locationStr}%0D%0A` +
                          `Map Link: https://www.google.com/maps?q=${locationStr}`;
 
             // Trigger Mail Client
             window.location.href = `mailto:contact@hobbynb.com?subject=${subject}&body=${body}`;
-            
-            // Optional: Alert user
-            alert(`Opening your email client to send request for: ${selectedHobbies.join(', ')}`);
         }
     </script>
 </body>
