@@ -8,19 +8,31 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     
     <style>
-        body { margin: 0; padding: 0; font-family: sans-serif; overflow: hidden; }
+        body { margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; overflow: hidden; }
 
-        /* --- 1. Map Layer --- */
-        #map { width: 100vw; height: 100vh; z-index: 1; }
+        /* --- 1. Rolling Ticker --- */
+        .ticker-wrap {
+            position: fixed; top: 0; width: 100%; height: 40px; background-color: #ff4757; color: white;
+            z-index: 2000; overflow: hidden; display: flex; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        .ticker {
+            display: inline-block; white-space: nowrap; padding-left: 100%;
+            animation: ticker 25s linear infinite; font-weight: 600; font-size: 14px;
+        }
+        @keyframes ticker {
+            0% { transform: translate3d(0, 0, 0); }
+            100% { transform: translate3d(-100%, 0, 0); }
+        }
 
-        /* --- 2. The Static Center Pin (Simplification) --- */
-        /* This replaces the need for JS to track the center marker */
+        /* --- 2. Map Layer --- */
+        #map { width: 100vw; height: 100vh; z-index: 1; margin-top: 40px; /* Offset for ticker */ }
+
+        /* --- 3. Static Center Pin (CSS Only) --- */
         .center-pin {
-            position: absolute;
-            top: 50%; left: 50%;
+            position: absolute; top: 50%; left: 50%;
             transform: translate(-50%, -50%);
-            z-index: 500;
-            pointer-events: none; /* Let clicks pass through to map */
+            z-index: 500; pointer-events: none;
+            margin-top: 20px; /* Adjust slightly for the ticker offset */
         }
         .pin-circle {
             width: 20px; height: 20px;
@@ -29,74 +41,88 @@
             box-shadow: 0 0 0 10px rgba(30, 144, 255, 0.3);
         }
 
-        /* --- 3. UI Overlay --- */
+        /* --- 4. Animated Markers & Bubbles --- */
+        .marker-wrap {
+            position: relative; text-align: center;
+            animation: bounce 2s infinite ease-in-out;
+        }
+        .emoji-icon { font-size: 35px; filter: drop-shadow(0 2px 2px rgba(0,0,0,0.3)); }
+        
+        .emoji-bubble {
+            background: white; padding: 4px 8px; border-radius: 12px;
+            font-size: 11px; font-weight: bold; color: #333;
+            border: 1px solid #ccc;
+            position: absolute; top: -25px; left: 50%; transform: translateX(-50%);
+            white-space: nowrap; box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .emoji-bubble::after {
+            content: ''; position: absolute; bottom: -5px; left: 50%; margin-left: -5px;
+            border-width: 5px; border-style: solid; 
+            border-color: white transparent transparent transparent;
+        }
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+
+        /* --- 5. UI Control Panel --- */
         .ui-container {
             position: absolute; bottom: 20px; left: 0; right: 0;
-            z-index: 999;
-            display: flex; justify-content: center;
-            pointer-events: none; /* Allow clicking map on sides */
+            z-index: 999; display: flex; justify-content: center;
+            pointer-events: none; 
         }
-        
         .control-panel {
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(5px);
-            border-radius: 20px;
-            padding: 20px;
+            border-radius: 20px; padding: 20px;
             width: 90%; max-width: 400px;
             text-align: center;
             box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-            pointer-events: auto; /* Re-enable clicking for buttons */
+            pointer-events: auto;
         }
-
+        
         h2 { margin: 0 0 5px 0; font-size: 1.2rem; color: #333; }
-        p { margin: 0 0 15px 0; font-size: 0.85rem; color: #666; }
+        p { margin: 0 0 15px 0; font-size: 0.8rem; color: #666; }
 
-        /* Grid */
-        .hobby-grid { 
-            display: grid; grid-template-columns: repeat(3, 1fr); 
-            gap: 8px; margin-bottom: 15px; 
-        }
+        .hobby-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 15px; }
         .hobby-btn {
             background: #f1f2f6; border: 1px solid #ddd;
-            border-radius: 8px; padding: 10px; font-size: 0.9rem;
+            border-radius: 8px; padding: 10px; font-size: 0.85rem;
             cursor: pointer; transition: 0.2s;
         }
-        .hobby-btn.active { 
-            background: #2ed573; color: white; border-color: #2ed573; 
-        }
+        .hobby-btn.active { background: #2ed573; color: white; border-color: #2ed573; }
 
-        /* Action Button */
         .whatsapp-btn {
             background: #25D366; color: white; border: none;
             padding: 12px 30px; border-radius: 50px;
             font-weight: bold; font-size: 1rem; cursor: pointer;
-            width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px;
+            width: 100%; display: flex; align-items: center; justify-content: center;
         }
         .whatsapp-btn:hover { background: #20bd5a; }
-
-        /* --- 4. Animation for Decor --- */
-        .emoji-float { font-size: 30px; animation: bounce 2s infinite; }
-        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
 
     </style>
 </head>
 <body>
 
-    <div class="center-pin">
-        <div class="pin-circle"></div>
+    <div class="ticker-wrap">
+        <div class="ticker">
+            Find activity partners near you  •   ₹1 lifetime membership, 100% refund guarantee   •   Tennis, Badminton, Art, Dance & more!   •   Join curated groups...
+        </div>
     </div>
+
+    <div class="center-pin"><div class="pin-circle"></div></div>
 
     <div id="map"></div>
 
     <div class="ui-container">
         <div class="control-panel">
             <h2>Find Hobby Partners</h2>
-            <p>1. Drag map to your location<br>2. Pick hobbies & join WhatsApp</p>
+            <p>1. Drag map to your location<br>2. Select hobbies & Join via WhatsApp</p>
 
             <div class="hobby-grid" id="hobbyGrid"></div>
             
             <button class="whatsapp-btn" onclick="sendToWhatsapp()">
-                Join via WhatsApp
+                Join Now (WhatsApp)
             </button>
         </div>
     </div>
@@ -104,55 +130,59 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
     <script>
-        // --- CONFIGURATION ---
+
         const hobbies = [
-            { label: 'Dance', emoji: '💃' },
-            { label: 'Paint', emoji: '🎨' },
-            { label: 'Tennis', emoji: '🎾' },
-            { label: 'Badminton', emoji: '🏸' },
-            { label: 'Music', emoji: '🎸' },
-            { label: 'Chess', emoji: '♟️' }
+            { label: 'Dance', emoji: '💃', text: "Let's dance!" },
+            { label: 'Paint', emoji: '🎨', text: "Let's paint!" },
+            { label: 'Tennis', emoji: '🎾', text: "Tennis match?" },
+            { label: 'Badminton', emoji: '🏸', text: "Play badminton?" },
+            { label: 'Music', emoji: '🎸', text: "Jam session?" },
+            { label: 'Chess', emoji: '♟️', text: "Chess game?" }
         ];
 
         let selectedHobbies = [];
 
-        // --- MAP SETUP ---
-        // Default View: Chennai
+        // Map Setup
         const map = L.map('map', { zoomControl: false }).setView([13.0827, 80.2707], 13);
-
         L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-            attribution: '&copy; OpenStreetMap',
-            maxZoom: 19
+            attribution: '© OpenStreetMap', maxZoom: 19
         }).addTo(map);
 
-        // --- DECORATIVE MARKERS (Just for visuals) ---
+        // --- DECORATIVE MARKERS WITH BUBBLES ---
         const markersLayer = L.layerGroup().addTo(map);
 
         function addRandomFloaters() {
             markersLayer.clearLayers();
             const bounds = map.getBounds();
             
-            // Create 3 random floaters in the current view
+            // Add 3 random markers
             for(let i=0; i<3; i++) {
                 const lat = bounds.getSouth() + Math.random() * (bounds.getNorth() - bounds.getSouth());
                 const lng = bounds.getWest() + Math.random() * (bounds.getEast() - bounds.getWest());
                 const h = hobbies[Math.floor(Math.random() * hobbies.length)];
                 
+                const htmlContent = `
+                    <div class="marker-wrap">
+                        <div class="emoji-bubble">${h.text}</div>
+                        <div class="emoji-icon">${h.emoji}</div>
+                    </div>`;
+
                 const icon = L.divIcon({
                     className: '', 
-                    html: `<div class="emoji-float">${h.emoji}</div>`,
-                    iconSize: [30, 30]
+                    html: htmlContent,
+                    iconSize: [40, 60],
+                    iconAnchor: [20, 40] 
                 });
+
                 L.marker([lat, lng], {icon: icon}).addTo(markersLayer);
             }
         }
         
         map.on('moveend', addRandomFloaters);
-        addRandomFloaters(); // Init
+        addRandomFloaters();
 
-        // --- UI LOGIC ---
+        // --- UI & WHATSAPP LOGIC ---
         const grid = document.getElementById('hobbyGrid');
-        
         hobbies.forEach(h => {
             const btn = document.createElement('div');
             btn.className = 'hobby-btn';
@@ -168,32 +198,26 @@
             grid.appendChild(btn);
         });
 
-        // --- WHATSAPP LOGIC ---
         function sendToWhatsapp() {
             if (selectedHobbies.length === 0) {
                 alert("Please select at least one hobby!");
                 return;
             }
-
-            // Get coordinates from the center of the map view
-            const center = map.getCenter(); 
+            const center = map.getCenter();
             const lat = center.lat.toFixed(6);
             const lng = center.lng.toFixed(6);
-            const mapLink = `https://maps.google.com/?q=${lat},${lng}`;
+            
+            // Create Google Maps Link
+            const mapLink = `https://www.google.com/maps?q=$${lat},${lng}`;
 
-            // Construct Message
             const text = 
-`Hi! I'm interested in joining HobbyNB.
+`Hi! I want to find hobby partners.
 
 *Hobbies:* ${selectedHobbies.join(', ')}
 *My Location:* ${mapLink}`;
 
-            // Open WhatsApp
-            const url = `https://wa.me/31682349653?text=${encodeURIComponent(text)}`;
-            window.open(url, '_blank');
+            window.open(`https://wa.me/31682349653?text=${encodeURIComponent(text)}`, '_blank');
         }
     </script>
 </body>
 </html>
-
-
